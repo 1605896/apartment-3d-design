@@ -46,6 +46,32 @@ export function checkAABBCollision(box1, box2, padding = 100) {
 }
 
 /**
+ * 获取AABB碰撞的重叠区域（用于可视化警告）
+ */
+export function getCollisionOverlap(box1, box2) {
+  const b1 = {
+    left: box1.x - box1.w / 2,
+    right: box1.x + box1.w / 2,
+    front: box1.z - box1.d / 2,
+    back: box1.z + box1.d / 2,
+  };
+
+  const b2 = {
+    left: box2.x - box2.w / 2,
+    right: box2.x + box2.w / 2,
+    front: box2.z - box2.d / 2,
+    back: box2.z + box2.d / 2,
+  };
+
+  const overlapX =
+    Math.max(0, Math.min(b1.right, b2.right) - Math.max(b1.left, b2.left));
+  const overlapZ =
+    Math.max(0, Math.min(b1.back, b2.back) - Math.max(b1.front, b2.front));
+
+  return { x: overlapX, z: overlapZ, area: overlapX * overlapZ };
+}
+
+/**
  * 约束值到范围内
  */
 export function clamp(value, min, max) {
