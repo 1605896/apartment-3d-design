@@ -1,0 +1,25 @@
+{
+  "name": "apartment-3d-design",
+  "version": "1.0.0",
+  "description": "Interactive 3D apartment decoration model with furniture placement, realistic materials, and spatial design visualization",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000",
+    "build": "echo 'No build step required'"
+  },
+  "keywords": [
+    "3d",
+    "interior-design",
+    "apartment",
+    "furniture",
+    "visualization",
+    "three.js"
+  ],
+  "author": "hosiman",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.161.0"
+  }
+}
