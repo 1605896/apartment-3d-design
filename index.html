@@ -233,7 +233,7 @@ import { createFPSMonitor } from "./src/utils/helpers.js";
 // ========== 初始化场景 ==========
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf8f6f2);
-scene.fog = new THREE.Fog(0xf8f6f2, 20000, 45000);
+scene.fog = new THREE.Fog(0xf8f6f2, 14000, 30000);
 
 const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 1, 50000);
 camera.position.set(11000, 9000, 11500);
@@ -253,8 +253,6 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.target.set(4900, 0, 4700);
 controls.autoRotate = false;
-controls.minDistance = 2000;   // prevent zooming inside/through furniture
-controls.maxDistance = 22000;  // stay well within fog.far (30000) so the model never fades out
 
 // ========== 材质与照明系统 ==========
 const materials = createMaterialLibrary();
@@ -293,9 +291,6 @@ function createFurniture(name, x, z, w, d, h, matKey, y) {
   group.userData = { draggable: true };
   scene.add(group);
 
-  if (materials[matKey]?.map) {
-    geometry.scale(w / 100, h / 100, d / 100);
-  }
 
   return group;
 }
