@@ -1,461 +1,367 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>9850 × 9450 智能装修 3D 设计系统（完整版）</title>
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #eee;
-    }
-    #canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-    #ui {
-      position: fixed;
-      z-index: 5;
-      left: 14px;
-      top: 14px;
-      width: 320px;
-      max-height: calc(100vh - 28px);
-      overflow-y: auto;
-      background: rgba(255, 255, 255, .96);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, .16);
-      font-size: 12px;
-      line-height: 1.5;
-      color: #333;
-    }
-    #ui h1 {
-      font-size: 16px;
-      margin: 0 0 12px;
-      color: #222;
-    }
-    #ui h2 {
-      font-size: 13px;
-      margin: 14px 0 8px;
-      color: #555;
-      font-weight: 600;
-    }
-    #ui p {
-      margin: 0 0 8px;
-      color: #666;
-    }
-    .note {
-      background: #f6f1e8;
-      padding: 8px;
-      border-radius: 8px;
-      margin: 8px 0;
-      font-size: 11px;
-      line-height: 1.4;
-    }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin: 6px 0;
-    }
-    button {
-      border: 0;
-      border-radius: 6px;
-      padding: 6px 10px;
-      background: #222;
-      color: white;
-      cursor: pointer;
-      font-size: 11px;
-      flex: 1;
-      min-width: 60px;
-      transition: all 0.2s;
-    }
-    button:hover {
-      background: #444;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
-    }
-    button.alt {
-      background: #ddd;
-      color: #222;
-    }
-    button.alt:hover {
-      background: #ccc;
-    }
-    select, input[type="text"], input[type="file"] {
-      width: 100%;
-      padding: 6px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 11px;
-      margin: 4px 0;
-      box-sizing: border-box;
-    }
-    .item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin: 4px 0;
-      padding: 6px;
-      background: #fafafa;
-      border-radius: 6px;
-      font-size: 11px;
-    }
-    .item input {
-      width: 50px;
-      padding: 4px;
-      margin: 0;
-    }
-    #legend span {
-      display: inline-block;
-      margin: 2px 3px 2px 0;
-      padding: 3px 7px;
-      border-radius: 6px;
-      background: #eee;
-      font-size: 10px;
-    }
-    #legend .living { background: #e8dcc9; }
-    #legend .bed { background: #dedbd0; }
-    #legend .wet { background: #cbdbea; }
-    #loading {
-      position: fixed;
-      inset: 0;
-      background: #f8f6f2;
-      z-index: 999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      color: #888;
-      transition: opacity 0.3s;
-    }
-    #loading.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Apartment 3D Design — Stable Viewer</title>
+<style>
+  :root{--panel:rgba(255,255,255,.96);--line:#ddd;--text:#222}
+  *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
+  body{background:#eee} canvas{display:block;width:100%;height:100%}
+  #ui{position:fixed;z-index:20;left:14px;top:14px;width:340px;max-height:calc(100vh - 28px);overflow:auto;background:var(--panel);border-radius:14px;padding:15px;box-shadow:0 10px 35px rgba(0,0,0,.18);font-size:12px}
+  h1{font-size:16px;margin:0 0 6px} h2{font-size:12px;margin:15px 0 7px;color:#555}
+  p{margin:5px 0;color:#666}.note{padding:8px;border-radius:8px;background:#f5f1e9;margin:8px 0;line-height:1.45}
+  .row{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin:5px 0}
+  .row.three{grid-template-columns:repeat(3,1fr)} .row.four{grid-template-columns:repeat(4,1fr)}
+  button{border:1px solid #d5d5d5;border-radius:7px;padding:7px 8px;background:#f7f7f7;color:#222;cursor:pointer;font-size:11px}
+  button:hover{background:#e8e8e8} button.active{background:#222;color:#fff;border-color:#222}
+  .toggle{display:flex;align-items:center;gap:7px;padding:7px;border:1px solid var(--line);border-radius:7px;background:#fafafa}
+  .toggle input{accent-color:#222}.stat{background:#fafafa;border:1px solid #eee;border-radius:8px;padding:8px;line-height:1.65}
+  #status{position:fixed;right:14px;bottom:14px;z-index:20;background:rgba(0,0,0,.72);color:#fff;padding:8px 11px;border-radius:8px;font-size:11px}
+  #loading{position:fixed;inset:0;z-index:100;background:#f8f6f2;display:grid;place-items:center;color:#777;transition:.25s}
+  #loading.hide{opacity:0;pointer-events:none}.small{font-size:10px;color:#888}
+</style>
 </head>
 <body>
-<div id="loading">
-  <div style="text-align: center;">
-    <div style="font-size: 24px; margin-bottom: 12px;">🏠</div>
-    <div>正在初始化 3D 场景...</div>
-    <div style="font-size: 11px; margin-top: 8px; color: #aaa;">加载材质、照明与家具数据</div>
-  </div>
-</div>
+<div id="loading"><div style="text-align:center"><div style="font-size:28px">🏠</div><div>Loading stable 3D viewer…</div></div></div>
 
 <div id="ui">
-  <h1>🏠 3D 装修设计系统</h1>
-  <p><b>9850 × 9450 mm 完整版</b></p>
+  <h1>🏠 Apartment 3D Design</h1>
+  <p><b>9850 × 9450 mm</b> · stable zoom + wall controls</p>
   <div class="note">
-    原则：完全保留原格局、门窗和厨房位置；只调整软装家具位置。
-  </div>
-  <div class="note" style="background: #f0f4ff; margin-top: 8px;">
-    <b>✨ 完整版功能：</b>写实材质 + 多场景照明 + 碰撞检测 + 尺寸标注 + 动线分析 + 布局保存
+    This version removes distance fog, uses a large camera clipping range, keeps the camera target centered,
+    and fixes furniture geometry scaling. Walls are controlled as real scene groups, so every wall mode can be switched reliably.
   </div>
 
-  <h2>📺 视角</h2>
+  <h2>VIEW</h2>
   <div class="row">
-    <button id="view-3d">3D</button>
-    <button id="view-top">俯视</button>
-    <button id="view-living">客餐厅</button>
-    <button id="view-master">主人房</button>
+    <button id="view3d" class="active">3D</button>
+    <button id="viewTop">Top</button>
+    <button id="viewLiving">Living / Dining</button>
+    <button id="viewMaster">Master Bedroom</button>
   </div>
 
-  <h2>💡 照明场景</h2>
-  <select id="lighting-scene">
-    <option value="morning">☀️ 早晨阳光</option>
-    <option value="noon" selected>🌞 正午阳光</option>
-    <option value="evening">🌅 傍晚温光</option>
-    <option value="night">🌙 夜间灯光</option>
-  </select>
+  <h2>WALL MODE</h2>
+  <div class="row three">
+    <button data-wall="all" class="wallMode active">All</button>
+    <button data-wall="exterior" class="wallMode">Exterior</button>
+    <button data-wall="interior" class="wallMode">Interior</button>
+  </div>
+  <div class="row three">
+    <button data-wall="none" class="wallMode">Hide All</button>
+    <button data-wall="auto" class="wallMode">Auto Cutaway</button>
+    <button id="wallReset">Reset</button>
+  </div>
+  <div class="row">
+    <label class="toggle"><input id="showGrid" type="checkbox" checked> Show floor grid</label>
+    <label class="toggle"><input id="showFurniture" type="checkbox" checked> Show furniture</label>
+  </div>
+  <p class="small">Auto Cutaway hides the exterior wall segments closest to the camera while orbiting. Interior walls stay visible.</p>
 
-  <h2>🛠️ 工具</h2>
-  <div class="row">
-    <button id="measure-tool">📏 测量</button>
-    <button id="flow-tool">🚶 动线</button>
-    <button id="collision-toggle">⚠️ 碰撞</button>
-  </div>
-  <div class="row">
-    <button id="save-layout">💾 保存</button>
-    <button id="load-layout">📂 加载</button>
-    <button id="export-csv">📊 导出</button>
-  </div>
-  <div class="row">
-    <button id="screenshot">📸 截图</button>
-    <button id="undo-btn">↶ 撤销</button>
-    <button id="redo-btn">↷ 重做</button>
+  <h2>LIGHTING</h2>
+  <div class="row four">
+    <button data-light="morning">Morning</button>
+    <button data-light="noon" class="active">Noon</button>
+    <button data-light="evening">Evening</button>
+    <button data-light="night">Night</button>
   </div>
 
-  <h2>🏠 家具与设备</h2>
-  <div id="legend">
-    <span class="living">客餐厅</span>
-    <span class="bed">卧室</span>
-    <span class="wet">卫浴</span>
+  <h2>CAMERA</h2>
+  <div class="row">
+    <button id="fit">Fit Apartment</button>
+    <button id="resetCamera">Reset Camera</button>
   </div>
-  <p style="font-size: 11px; color: #999;">可直接拖动家具改变位置</p>
+  <div class="row">
+    <button id="zoomIn">＋ Zoom In</button>
+    <button id="zoomOut">－ Zoom Out</button>
+  </div>
+
+  <h2>FURNITURE</h2>
+  <p>Drag furniture on the floor. It is constrained to the apartment boundary.</p>
   <div id="objects"></div>
 
-  <h2>📊 实时统计</h2>
-  <div id="stats" style="background: #f9f9f9; padding: 8px; border-radius: 6px; font-size: 11px;">
-    <div>📦 家具: <span id="stat-furniture">0</span></div>
-    <div>⚠️ 碰撞: <span id="stat-collisions">0</span></div>
-    <div>📐 使用率: <span id="stat-usage">0</span>%</div>
-    <div>⚡ FPS: <span id="stat-fps">60</span></div>
+  <h2>STATUS</h2>
+  <div class="stat">
+    <div>Furniture: <b id="count">0</b></div>
+    <div>Camera distance: <b id="distance">0</b> mm</div>
+    <div>Wall mode: <b id="wallStatus">All</b></div>
   </div>
 </div>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.161/build/three.module.js"
-  }
-}
-</script>
+<div id="status">Ready</div>
 
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161/build/three.module.js";
 import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.161/examples/jsm/controls/OrbitControls.js";
-import { createMaterialLibrary } from "./src/core/materials.js";
-import { LightingController } from "./src/core/lighting.js";
-import { EnhancedDragController } from "./src/interaction/drag.js";
-import { HistoryManager } from "./src/interaction/history.js";
-import { FURNITURE_DB } from "./src/utils/furniture-db.js";
-import { UIPanel } from "./src/ui/panel.js";
-import { ExportManager } from "./src/ui/export.js";
-import { MeasurementTool, FlowAnalysisTool } from "./src/ui/tools.js";
-import { createFPSMonitor } from "./src/utils/helpers.js";
 
-// ========== 初始化场景 ==========
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf8f6f2);
-scene.fog = new THREE.Fog(0xf8f6f2, 14000, 30000);
+const W=9850, D=9450, WALL_H=2850, WALL_T=180;
+const CENTER=new THREE.Vector3(W/2,0,D/2);
 
-const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 1, 50000);
-camera.position.set(11000, 9000, 11500);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xf5f3ef);
+// IMPORTANT: no scene fog. Fog was one of the causes of a model apparently disappearing when zooming out.
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.08;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+const camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,10,300000);
+camera.position.set(12500,10500,14000);
+
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
 document.body.appendChild(renderer.domElement);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.target.set(4900, 0, 4700);
-controls.autoRotate = false;
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=.06;
+controls.enablePan=true;
+controls.screenSpacePanning=true;
+controls.minDistance=1800;
+controls.maxDistance=150000;
+controls.target.copy(CENTER);
+controls.maxPolarAngle=Math.PI*.49;
+controls.minPolarAngle=.04;
 
-// ========== 材质与照明系统 ==========
-const materials = createMaterialLibrary();
-const lightingController = new LightingController(scene);
-lightingController.setLightingScene("noon");
-
-// ========== 空间参数 ==========
-const W = 9850, D = 9450, wallH = 2850, wallT = 180;
-
-// 地板
-const floor = new THREE.Mesh(new THREE.BoxGeometry(W, 80, D), materials.floor);
-floor.position.set(W / 2, -40, D / 2);
-floor.receiveShadow = true;
-scene.add(floor);
-
-// 网格辅助线
-const grid = new THREE.GridHelper(10000, 20, 0xcfc7b8, 0xe4ddcd);
-grid.position.set(W / 2, 1, D / 2);
-scene.add(grid);
-
-// ========== 家具系统 ==========
-const draggableFurniture = [];
-
-function createFurniture(name, x, z, w, d, h, matKey, y) {
-  const geometry = new THREE.BoxGeometry(w, h, d);
-  const mesh = new THREE.Mesh(geometry, materials[matKey]);
-  mesh.position.set(x, y + h / 2, z);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-
-  const group = new THREE.Group();
-  group.name = name;
-  group.position.set(x, 0, z);
-  group.add(mesh);
-  group.dimensions = { w, d, h };
-  group.userData = { draggable: true };
-  scene.add(group);
-
-
-  return group;
-}
-
-// 创建家具实例（根据 FURNITURE_DB）
-const furnitureInstances = [
-  createFurniture("Master bed", 1500, 2350, 1800, 2100, 450, "fabric", 0),
-  createFurniture("Living sofa", 8250, 3300, 2900, 900, 800, "fabric", 0),
-  createFurniture("Dining table", 8200, 5600, 1500, 1500, 760, "wood", 0),
-  createFurniture("Bedroom 2 bed", 4800, 2600, 1500, 2000, 420, "fabric", 0),
-  createFurniture("Bedroom 3 bed", 5200, 5900, 1400, 2000, 280, "fabric", 0),
-];
-
-furnitureInstances.forEach(f => draggableFurniture.push(f));
-
-// ========== 墙体结构（固定）==========
-function createWall(x, z, w, d) {
-  const geometry = new THREE.BoxGeometry(w, wallH, d);
-  const mesh = new THREE.Mesh(geometry, materials.wall);
-  mesh.position.set(x, wallH / 2, z);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  scene.add(mesh);
-}
-
-createWall(W / 2, 0, W, wallT);
-createWall(W / 2, D, W, wallT);
-createWall(0, D / 2, wallT, D);
-createWall(W, D / 2, wallT, D);
-createWall(3000, 2125, wallT, 4250);
-createWall(6850, 2125, wallT, 4250);
-createWall(3000, 5450, wallT, 2400);
-
-// ========== 交互系统 ==========
-const dragController = new EnhancedDragController(
-  draggableFurniture,
-  camera,
-  renderer,
-  {
-    boundaries: { minX: 300, maxX: 9550, minZ: 300, maxZ: 9150 },
-    enableCollisionDetection: true,
-    enableVisualization: true,
-  }
-);
-
-const historyManager = new HistoryManager();
-historyManager.saveState(draggableFurniture);
-
-const exportManager = new ExportManager(renderer, scene);
-const measurementTool = new MeasurementTool(scene, camera);
-const flowAnalysisTool = new FlowAnalysisTool(scene);
-
-// ========== UI 系统 ==========
-const ui = new UIPanel({ containerSelector: "#ui" });
-ui.initialize();
-
-// 事件监听
-ui.on("onViewChange", (viewName) => {
-  const views = {
-    perspective: { pos: [11000, 9000, 11500], target: [4900, 0, 4700] },
-    top: { pos: [W / 2, 13500, D / 2], target: [W / 2, 0, D / 2] },
-    living: { pos: [10800, 4700, 6000], target: [8200, 0, 5000] },
-    master: { pos: [4400, 3800, 6500], target: [1700, 0, 2500] },
-  };
-  const v = views[viewName] || views.perspective;
-  camera.position.set(...v.pos);
-  controls.target.set(...v.target);
-  controls.update();
-});
-
-ui.on("onLightingChange", (sceneName) => {
-  lightingController.setLightingScene(sceneName);
-});
-
-ui.on("onSaveLayout", () => {
-  exportManager.saveLayout(draggableFurniture);
-  ui.showNotification("✅ 布局已保存", "success");
-});
-
-ui.on("onScreenshot", () => {
-  exportManager.screenshot();
-  ui.showNotification("📸 截图已保存", "success");
-});
-
-ui.on("onUndo", () => {
-  if (historyManager.canUndo()) {
-    historyManager.undo(draggableFurniture);
-    ui.showNotification("↶ 已撤销", "info");
-  }
-});
-
-ui.on("onRedo", () => {
-  if (historyManager.canRedo()) {
-    historyManager.redo(draggableFurniture);
-    ui.showNotification("↷ 已重做", "info");
-  }
-});
-
-// ========== 性能监控 ==========
-const fpsMonitor = createFPSMonitor();
-
-// ========== 更新UI ==========
-function updateUIStats() {
-  const collisions = dragController.getCollisionReport();
-  document.getElementById("stat-furniture").textContent = draggableFurniture.length;
-  document.getElementById("stat-collisions").textContent = collisions.length;
-  document.getElementById("stat-usage").textContent = Math.round(
-    (draggableFurniture.length * 500 * 500) / (W * D) * 100
-  );
-  document.getElementById("stat-fps").textContent = fpsMonitor.getFPS();
-}
-
-function updateFurnitureList() {
-  ui.updateFurnitureList(
-    draggableFurniture.map((obj, i) => ({
-      name: obj.name,
-      position: obj.position,
-      category: FURNITURE_DB.bed?.[obj.name]?.category || "other",
-    }))
-  );
-}
-
-updateFurnitureList();
-
-// ========== 动画循环 ==========
-function animate() {
-  requestAnimationFrame(animate);
-
-  controls.update();
-  fpsMonitor.update();
-  updateUIStats();
-
-  renderer.render(scene, camera);
-}
-
-animate();
-
-// ========== 响应式 ==========
-window.addEventListener("resize", () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
-
-// ========== 隐藏加载屏 ==========
-window.addEventListener("load", () => {
-  setTimeout(() => {
-    const loading = document.getElementById("loading");
-    loading.classList.add("hidden");
-    setTimeout(() => loading.style.display = "none", 300);
-  }, 500);
-});
-
-// 导出全局引用（用于控制台调试）
-window.app = {
-  scene,
-  camera,
-  renderer,
-  controls,
-  dragController,
-  historyManager,
-  lightingController,
-  ui,
-  exportManager,
+const mats={
+ floor:new THREE.MeshStandardMaterial({color:0xd4b887,roughness:.58}),
+ wall:new THREE.MeshStandardMaterial({color:0xeeeae1,roughness:.92,side:THREE.DoubleSide}),
+ interior:new THREE.MeshStandardMaterial({color:0xe6e0d5,roughness:.9,side:THREE.DoubleSide}),
+ fabric:new THREE.MeshStandardMaterial({color:0xe9e2d7,roughness:.86}),
+ wood:new THREE.MeshStandardMaterial({color:0xb88d5d,roughness:.5}),
+ dark:new THREE.MeshStandardMaterial({color:0x252525,roughness:.38,metalness:.25}),
+ rug:new THREE.MeshStandardMaterial({color:0xc4a67d,roughness:.96})
 };
+
+const floor=new THREE.Mesh(new THREE.BoxGeometry(W,80,D),mats.floor);
+floor.position.set(W/2,-40,D/2); floor.receiveShadow=true; scene.add(floor);
+
+const grid=new THREE.GridHelper(Math.max(W,D),20,0xbdb6aa,0xded8cd);
+grid.position.set(CENTER.x,2,CENTER.z); scene.add(grid);
+
+const exterior=new THREE.Group(); exterior.name="Exterior Walls";
+const interior=new THREE.Group(); interior.name="Interior Walls";
+scene.add(exterior,interior);
+
+function wall(group,name,x,z,w,d,material=mats.wall){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,WALL_H,d),material);
+  m.name=name; m.position.set(x,WALL_H/2,z); m.castShadow=true; m.receiveShadow=true;
+  m.userData.wallType=group===exterior?"exterior":"interior";
+  group.add(m); return m;
+}
+// Same apartment wall layout as the original repository.
+wall(exterior,"North Exterior",W/2,0,W,WALL_T);
+wall(exterior,"South Exterior",W/2,D,W,WALL_T);
+wall(exterior,"West Exterior",0,D/2,WALL_T,D);
+wall(exterior,"East Exterior",W,D/2,WALL_T,D);
+
+wall(interior,"Partition A",3000,2125,WALL_T,4250,mats.interior);
+wall(interior,"Partition B",6850,2125,WALL_T,4250,mats.interior);
+wall(interior,"Partition C",3000,5450,WALL_T,2400,mats.interior);
+
+const furniture=[];
+function boxFurniture(name,x,z,w,d,h,material,category){
+  // IMPORTANT: dimensions are applied exactly once. The old code created BoxGeometry(w,h,d)
+  // and then scaled it again, which could produce incorrect furniture sizes.
+  const g=new THREE.Group(); g.name=name;
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
+  body.position.y=h/2; body.castShadow=true; body.receiveShadow=true;
+  g.add(body); g.position.set(x,0,z);
+  g.userData={draggable:true,w,d,h,category};
+  scene.add(g); furniture.push(g); return g;
+}
+boxFurniture("Master Bed",1500,2350,1800,2100,450,mats.fabric,"Bedroom");
+boxFurniture("Living Sofa",8250,3300,2900,900,800,mats.fabric,"Living");
+boxFurniture("Dining Table",8200,5600,1500,1500,760,mats.wood,"Dining");
+boxFurniture("Bedroom 2 Bed",4800,2600,1500,2000,420,mats.fabric,"Bedroom");
+boxFurniture("Bedroom 3 Bed",5200,5900,1400,2000,280,mats.fabric,"Bedroom");
+
+// Add simple legs to the dining table for a more useful visual scale.
+const table=furniture.find(x=>x.name==="Dining Table");
+if(table){
+  for(const sx of [-1,1]) for(const sz of [-1,1]){
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(70,700,70),mats.dark);
+    leg.position.set(sx*600,350,sz*600); leg.castShadow=true; table.add(leg);
+  }
+}
+
+const ambient=new THREE.HemisphereLight(0xfff8ea,0x777777,1.4); scene.add(ambient);
+const sun=new THREE.DirectionalLight(0xfff1d5,2.3); sun.position.set(4000,10000,2500);
+sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-14000; sun.shadow.camera.right=14000;
+sun.shadow.camera.top=14000; sun.shadow.camera.bottom=-14000;
+sun.shadow.camera.near=100; sun.shadow.camera.far=50000; scene.add(sun);
+
+const fill=new THREE.DirectionalLight(0xddeaff,.65); fill.position.set(-7000,5000,-5000); scene.add(fill);
+
+const lights={
+ morning:{sun:1.7,ambient:1.25,fill:.55,pos:[-5000,9000,7000]},
+ noon:{sun:2.3,ambient:1.4,fill:.65,pos:[4000,10000,2500]},
+ evening:{sun:1.15,ambient:.95,fill:.4,pos:[-6000,6500,2500]},
+ night:{sun:.35,ambient:.38,fill:.25,pos:[2500,7000,-5000]}
+};
+function setLighting(name){
+  const x=lights[name]||lights.noon; sun.intensity=x.sun; ambient.intensity=x.ambient; fill.intensity=x.fill;
+  sun.position.set(...x.pos);
+  document.querySelectorAll("[data-light]").forEach(b=>b.classList.toggle("active",b.dataset.light===name));
+}
+
+let wallMode="all";
+function setWallMode(mode){
+  wallMode=mode;
+  document.querySelectorAll(".wallMode").forEach(b=>b.classList.toggle("active",b.dataset.wall===mode));
+  if(mode==="all"){exterior.visible=true; interior.visible=true;}
+  else if(mode==="exterior"){exterior.visible=true; interior.visible=false;}
+  else if(mode==="interior"){exterior.visible=false; interior.visible=true;}
+  else if(mode==="none"){exterior.visible=false; interior.visible=false;}
+  updateStatus();
+}
+function autoCutaway(){
+  if(wallMode!=="auto") return;
+  interior.visible=true; exterior.visible=true;
+  // Hide the exterior wall whose center faces the camera most directly.
+  const cam=camera.position;
+  const sides=[
+    {obj:exterior.children[0],p:new THREE.Vector3(W/2,0,0)},
+    {obj:exterior.children[1],p:new THREE.Vector3(W/2,0,D)},
+    {obj:exterior.children[2],p:new THREE.Vector3(0,0,D/2)},
+    {obj:exterior.children[3],p:new THREE.Vector3(W,0,D/2)}
+  ];
+  const sorted=sides.map(s=>{
+    const v=s.p.clone().sub(cam); return {obj:s.obj,score:v.lengthSq()};
+  }).sort((a,b)=>a.score-b.score);
+  // Hide the two closest exterior segments, but never touch interior partitions.
+  exterior.children.forEach(x=>x.visible=true);
+  sorted.slice(0,2).forEach(x=>x.obj.visible=false);
+}
+document.querySelectorAll(".wallMode").forEach(b=>b.onclick=()=>setWallMode(b.dataset.wall));
+document.getElementById("wallReset").onclick=()=>setWallMode("all");
+
+function updateClipping(){
+  // Keep near/far proportional to camera distance so zooming never clips the apartment.
+  const d=camera.position.distanceTo(controls.target);
+  camera.near=Math.max(5,Math.min(100,d/200));
+  camera.far=Math.max(100000,d*25,W*30);
+  camera.updateProjectionMatrix();
+  document.getElementById("distance").textContent=Math.round(d).toLocaleString();
+}
+function fitApartment(){
+  const sphere=new THREE.Sphere(CENTER.clone().add(new THREE.Vector3(0,WALL_H*.35,0)),Math.sqrt(W*W+D*D)/2);
+  const fov=THREE.MathUtils.degToRad(camera.fov);
+  const distance=sphere.radius/Math.tan(fov/2)*1.15;
+  const dir=new THREE.Vector3(1,.72,1).normalize();
+  camera.position.copy(CENTER).add(dir.multiplyScalar(distance));
+  camera.position.y=Math.max(camera.position.y,6500);
+  controls.target.copy(CENTER); controls.update(); updateClipping();
+}
+function resetCamera(){
+  camera.position.set(12500,10500,14000); controls.target.copy(CENTER); controls.update(); updateClipping();
+}
+document.getElementById("fit").onclick=fitApartment;
+document.getElementById("resetCamera").onclick=resetCamera;
+document.getElementById("zoomIn").onclick=()=>zoomBy(.72);
+document.getElementById("zoomOut").onclick=()=>zoomBy(1.38);
+function zoomBy(factor){
+  const offset=camera.position.clone().sub(controls.target);
+  const d=THREE.MathUtils.clamp(offset.length()*factor,controls.minDistance,controls.maxDistance);
+  offset.setLength(d); camera.position.copy(controls.target).add(offset); updateClipping();
+}
+
+function setView(pos,target){
+  camera.position.set(...pos); controls.target.set(...target); controls.update(); updateClipping();
+}
+document.getElementById("view3d").onclick=()=>setView([12500,10500,14000],[W/2,0,D/2]);
+document.getElementById("viewTop").onclick=()=>setView([W/2,14500,D/2],[W/2,0,D/2]);
+document.getElementById("viewLiving").onclick=()=>setView([11500,5200,6500],[8000,0,4800]);
+document.getElementById("viewMaster").onclick=()=>setView([4800,4300,7000],[1900,0,2600]);
+["view3d","viewTop","viewLiving","viewMaster"].forEach(id=>{
+  document.getElementById(id).addEventListener("click",()=>{
+    ["view3d","viewTop","viewLiving","viewMaster"].forEach(x=>document.getElementById(x).classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  });
+});
+
+document.querySelectorAll("[data-light]").forEach(b=>b.onclick=()=>setLighting(b.dataset.light));
+document.getElementById("showGrid").onchange=e=>grid.visible=e.target.checked;
+document.getElementById("showFurniture").onchange=e=>furniture.forEach(x=>x.visible=e.target.checked);
+
+// Furniture list and reliable drag system.
+const objects=document.getElementById("objects");
+function buildFurnitureList(){
+  objects.innerHTML="";
+  furniture.forEach((f,i)=>{
+    const row=document.createElement("div");
+    row.style.cssText="display:grid;grid-template-columns:1fr auto;gap:5px;margin:4px 0;padding:6px;background:#fafafa;border:1px solid #eee;border-radius:7px";
+    row.innerHTML=`<span>${f.name}</span><button data-i="${i}">Focus</button>`;
+    row.querySelector("button").onclick=()=>{
+      controls.target.set(f.position.x,0,f.position.z);
+      const p=f.position.clone().add(new THREE.Vector3(2200,1800,2200));
+      camera.position.copy(p); controls.update(); updateClipping();
+    };
+    objects.appendChild(row);
+  });
+  document.getElementById("count").textContent=furniture.length;
+}
+buildFurnitureList();
+
+const raycaster=new THREE.Raycaster(), mouse=new THREE.Vector2();
+let dragging=null,dragPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0),dragOffset=new THREE.Vector3();
+function pointer(e){
+  const r=renderer.domElement.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1; mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+}
+renderer.domElement.addEventListener("pointerdown",e=>{
+  pointer(e); raycaster.setFromCamera(mouse,camera);
+  const hits=raycaster.intersectObjects(furniture,true);
+  if(!hits.length)return;
+  let g=hits[0].object;
+  while(g.parent && !g.userData.draggable)g=g.parent;
+  if(!g.userData.draggable)return;
+  dragging=g; controls.enabled=false;
+  const hit=new THREE.Vector3(); raycaster.ray.intersectPlane(dragPlane,hit);
+  dragOffset.copy(g.position).sub(hit); renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener("pointermove",e=>{
+  if(!dragging)return;
+  pointer(e); raycaster.setFromCamera(mouse,camera);
+  const hit=new THREE.Vector3(); if(!raycaster.ray.intersectPlane(dragPlane,hit))return;
+  const w=dragging.userData.w,d=dragging.userData.d;
+  dragging.position.x=THREE.MathUtils.clamp(hit.x+dragOffset.x,w/2+100,W-w/2-100);
+  dragging.position.z=THREE.MathUtils.clamp(hit.z+dragOffset.z,d/2+100,D-d/2-100);
+});
+function stopDrag(){if(dragging){dragging=null;controls.enabled=true}}
+renderer.domElement.addEventListener("pointerup",stopDrag);
+renderer.domElement.addEventListener("pointercancel",stopDrag);
+
+controls.addEventListener("change",()=>{updateClipping();autoCutaway()});
+controls.addEventListener("start",()=>{if(wallMode==="auto")autoCutaway()});
+
+function updateStatus(){
+  const labels={all:"All",exterior:"Exterior",interior:"Interior",none:"Hidden",auto:"Auto Cutaway"};
+  document.getElementById("wallStatus").textContent=labels[wallMode];
+  document.getElementById("status").textContent=`Wall: ${labels[wallMode]} · Zoom is stable`;
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  updateClipping();
+  if(wallMode==="auto")autoCutaway();
+  renderer.render(scene,camera);
+}
+window.addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); updateClipping();
+});
+
+setLighting("noon");
+setWallMode("all");
+fitApartment();
+setTimeout(()=>document.getElementById("loading").classList.add("hide"),350);
+
+// Debug API
+window.app={scene,camera,renderer,controls,exterior,interior,furniture,setWallMode,fitApartment,resetCamera,zoomBy};
+animate();
 </script>
 </body>
 </html>
