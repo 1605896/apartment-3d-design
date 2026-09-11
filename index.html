@@ -252,6 +252,8 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.target.set(4900, 0, 4700);
+controls.minDistance = 2000;   // prevent zooming inside/through furniture
+controls.maxDistance = 22000;  // stay well within fog.far (30000) so the model never fades out
 controls.autoRotate = false;
 
 // ========== 材质与照明系统 ==========
